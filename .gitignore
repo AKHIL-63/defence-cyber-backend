@@ -1,0 +1,15 @@
+# Dependencies
+node_modules
+
+# Environment variables (never commit real secrets)
+.env
+
+# Editor/OS files
+.DS_Store
+
+# Leftover nano/editor backup files
+*.save
+
+# File uploads stored locally (not needed in the repository)
+uploads/
+
