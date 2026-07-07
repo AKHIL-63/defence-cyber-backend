@@ -21,7 +21,10 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+
+// Default Express body limit (100kb) is too small for a base64-encoded
+// screenshot image. 6mb comfortably covers a compressed phone screenshot.
+app.use(express.json({ limit: "6mb" }));
 
 // ==========================
 // HEALTH CHECK ROUTE

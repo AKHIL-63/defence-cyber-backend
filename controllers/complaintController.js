@@ -6,13 +6,26 @@ const { analyzeIncident } = require("../services/aiRiskService");
 // ===============================
 const createComplaint = async (req, res) => {
     try {
-        const { title, description } = req.body;
+        const { title, description, screenshot } = req.body;
         const user_id = req.user.id;
 
         if (!title || !description) {
             return res.status(400).json({
                 message: "Title and description are required"
             });
+        }
+
+        // Basic safety check: only accept something that actually looks
+        // like an image data URL, and keep a sane size ceiling even
+        // though express.json's 6mb limit already protects the server.
+        let safeScreenshot = null;
+
+        if (screenshot) {
+            const looksLikeImage = /^data:image\/(png|jpeg|jpg|webp);base64,/.test(screenshot);
+
+            if (looksLikeImage && screenshot.length < 6 * 1024 * 1024) {
+                safeScreenshot = screenshot;
+            }
         }
 
         const analysis = analyzeIncident(title, description);
@@ -28,10 +41,11 @@ const createComplaint = async (req, res) => {
                 risk_score,
                 recommendation,
                 status,
+                screenshot,
                 incident_date,
                 created_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
             RETURNING *`,
             [
                 user_id,
@@ -42,7 +56,8 @@ const createComplaint = async (req, res) => {
                 analysis.severity,
                 analysis.riskScore,
                 analysis.recommendation,
-                "Pending"
+                "Pending",
+                safeScreenshot
             ]
         );
 
